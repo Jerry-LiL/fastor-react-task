@@ -1,0 +1,8 @@
+{
+  "name": "Fastor",
+  "short_name": "Fastor",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FF5701"
+}
