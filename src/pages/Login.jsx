@@ -8,7 +8,7 @@ export default function Login() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
-  const [phone, setPhone] = useState('');
+  const [phoneDigits, setPhoneDigits] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -18,13 +18,29 @@ export default function Login() {
     }
   }, [isAuthenticated, navigate]);
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    }
+  };
+
+  const handlePhoneChange = (e) => {
+    const raw = e.target.value;
+    const digits = raw.replace(/\D/g, '').slice(0, 10);
+    setPhoneDigits(digits);
+    if (error) setError('');
+  };
+
+  const displayValue =
+    phoneDigits.length > 5
+      ? `${phoneDigits.slice(0, 5)} ${phoneDigits.slice(5)}`
+      : phoneDigits;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    const cleanPhone = phone.trim();
-
-    if (!isValidPhoneNumber(cleanPhone)) {
+    if (!isValidPhoneNumber(phoneDigits)) {
       setError('Please enter a valid 10-digit mobile number.');
       return;
     }
@@ -32,8 +48,8 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      await registerUser(cleanPhone);
-      navigate('/otp', { state: { phone: cleanPhone } });
+      await registerUser(phoneDigits);
+      navigate('/otp', { state: { phone: phoneDigits } });
     } catch (err) {
       setError(err.message || 'Unable to send code. Please try again.');
     } finally {
@@ -41,31 +57,60 @@ export default function Login() {
     }
   };
 
+  const isComplete = phoneDigits.length === 10;
+
   return (
     <div className="page-container screen-auth">
-      <div className="auth-content">
+      <div className="auth-top-bar">
+        <button
+          type="button"
+          onClick={handleBack}
+          className="back-arrow-btn"
+          aria-label="Back"
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#FF5701"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="auth-body">
         <div className="auth-header">
-          <h1 className="auth-title">Enter Your Mobile Number</h1>
+          <h1 className="auth-title">Sign Up to Fastor</h1>
           <p className="auth-subtitle">
-            We will send you the 4 digit verification code
+            Let us know your mobile number and we will send you an OTP for
+            verification.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form" noValidate>
-          <div className="input-group">
+          <div
+            className={`phone-input-composite ${
+              error ? 'composite-error' : ''
+            }`}
+          >
+            <span className="phone-prefix">+91</span>
+            <span className="phone-caret" aria-hidden="true" />
             <input
               type="tel"
+              inputMode="numeric"
               id="phone-input"
-              className={`text-input ${error ? 'input-error' : ''}`}
-              placeholder="Enter Mobile Number"
-              value={phone}
-              onChange={(e) => {
-                const val = e.target.value.replace(/\D/g, '').slice(0, 10);
-                setPhone(val);
-                if (error) setError('');
-              }}
+              className="phone-input-field"
+              placeholder="00000 00000"
+              value={displayValue}
+              onChange={handlePhoneChange}
               disabled={isLoading}
-              maxLength={10}
+              maxLength={11}
               aria-label="Mobile Number"
               autoFocus
             />
@@ -77,13 +122,21 @@ export default function Login() {
             </div>
           )}
 
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={isLoading || !phone}
-          >
-            {isLoading ? 'Sending...' : 'Send Code'}
-          </button>
+          <div className="auth-bottom-pinned">
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={isLoading || !isComplete}
+            >
+              {isLoading ? 'Sending...' : 'Get OTP'}
+            </button>
+
+            <p className="terms-notice">
+              By clicking, I accept the{' '}
+              <span className="terms-bold">Terms &amp; Conditions</span> and{' '}
+              <span className="terms-bold">Privacy Policy</span>
+            </p>
+          </div>
         </form>
       </div>
     </div>

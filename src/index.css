@@ -1,25 +1,34 @@
 :root {
-  --primary-coral: #FF6D6A;
-  --primary-coral-hover: #ff5552;
-  --primary-coral-light: rgba(255, 109, 106, 0.12);
-  --wallet-blue: #4A80F0;
-  --wallet-blue-light: rgba(74, 128, 240, 0.12);
-  --bg-app: #F7F8FA;
+  /* New design colors */
+  --primary-btn: #FF5701;
+  --primary-btn-hover: #e04c00;
+  --accent-orange: #E95322;
+  --light-peach: #FFDECF;
+  --peach-text: #E95322;
+  --divider-color: #FFD8C7;
+  --heading-auth: #292E39;
+  --heading-brown: #391713;
+  --input-bg: #F5F5F5;
+  --input-border: #C7C7C7;
+  --inactive-dot: #F3E9B5;
+  --call-grad-start: #FF936D;
+  --call-grad-end: #FF726B;
+  --wallet-grad-start: #7CC7ED;
+  --wallet-grad-end: #4F79CB;
+  --text-muted: #797979;
+
+  --bg-app: #FFFFFF;
   --bg-card: #FFFFFF;
-  --text-main: #1C1E21;
-  --text-muted: #7E858E;
-  --text-light: #A3A8AF;
-  --border-color: #E7EAEE;
-  --border-focus: #FF6D6A;
-  --star-gold: #F5A623;
-  --font-family: 'Urbanist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --text-main: #292E39;
+  --font-auth: 'Mulish', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'League Spartan', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-family: 'Mulish', -apple-system, BlinkMacSystemFont, sans-serif;
+
   --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
+  --radius-md: 10px;
+  --radius-lg: 18px;
+  --radius-xl: 28px;
   --radius-pill: 9999px;
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
 
 * {
@@ -40,16 +49,16 @@ body {
   justify-content: center;
 }
 
-/* App shell container centered on desktop, full-width on mobile */
+/* App shell container centered on desktop (max 430px), full-width on mobile */
 .app-shell {
   width: 100%;
   max-width: 430px;
   min-height: 100vh;
-  background-color: var(--bg-app);
+  background-color: #FFFFFF;
   display: flex;
   flex-direction: column;
   position: relative;
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 32px rgba(0, 0, 0, 0.08);
 }
 
 .app-main-content {
@@ -69,37 +78,41 @@ body {
    AUTHENTICATION SCREENS (LOGIN & OTP)
    ========================================================== */
 .screen-auth {
-  padding: 24px 20px 40px 20px;
-  background-color: var(--bg-card);
-  justify-content: center;
+  padding: 24px 24px 32px 24px;
+  background-color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: var(--font-auth);
 }
 
-.auth-nav-bar {
-  margin-bottom: 24px;
+.auth-top-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 28px;
 }
 
-.back-icon-btn {
+.back-arrow-btn {
   background: none;
   border: none;
-  color: var(--text-main);
-  cursor: pointer;
   padding: 8px;
   margin-left: -8px;
-  display: flex;
+  cursor: pointer;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  transition: background-color 0.15s ease;
+  transition: opacity 0.15s ease;
 }
 
-.back-icon-btn:hover {
-  background-color: #F0F2F5;
+.back-arrow-btn:hover {
+  opacity: 0.8;
 }
 
-.auth-content {
+.auth-body {
   display: flex;
   flex-direction: column;
-  width: 100%;
+  flex: 1;
 }
 
 .auth-header {
@@ -109,9 +122,9 @@ body {
 .auth-title {
   font-size: 26px;
   font-weight: 700;
-  color: var(--text-main);
+  color: var(--heading-auth);
   line-height: 1.25;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .auth-subtitle {
@@ -120,78 +133,156 @@ body {
   line-height: 1.45;
 }
 
+.auth-target-number {
+  color: var(--heading-auth);
+  font-weight: 700;
+  display: block;
+  margin-top: 4px;
+}
+
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  flex: 1;
 }
 
-.input-group {
+/* Composite Phone Input */
+.phone-input-composite {
   display: flex;
-  flex-direction: column;
-}
-
-.text-input {
-  width: 100%;
-  height: 52px;
+  align-items: center;
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 10px;
+  height: 56px;
   padding: 0 16px;
-  font-size: 16px;
-  font-family: inherit;
-  color: var(--text-main);
-  background-color: #F8F9FB;
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-md);
-  outline: none;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  gap: 12px;
+  transition: border-color 0.2s ease;
 }
 
-.text-input:focus {
-  border-color: var(--primary-coral);
-  background-color: #FFFFFF;
+.phone-input-composite:focus-within {
+  border-color: var(--primary-btn);
 }
 
-.text-input.input-error {
+.phone-input-composite.composite-error {
   border-color: #E53935;
 }
 
-/* 6-box OTP Input */
-.otp-container {
+.phone-prefix {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--heading-auth);
+}
+
+.phone-caret {
+  width: 2px;
+  height: 22px;
+  background-color: var(--primary-btn);
+  border-radius: 1px;
+}
+
+.phone-input-field {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--heading-auth);
+  letter-spacing: 0.5px;
+}
+
+.phone-input-field::placeholder {
+  color: #BDBDBD;
+}
+
+/* OTP 6-box input with group dash */
+.otp-composite-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 6px;
+  margin-top: 8px;
+  margin-bottom: 24px;
+}
+
+.otp-subgroup {
+  display: flex;
+  align-items: center;
   gap: 8px;
-  margin: 10px 0 16px 0;
 }
 
 .otp-box {
-  width: 48px;
+  width: 44px;
   height: 54px;
   text-align: center;
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--text-main);
-  background-color: #F8F9FB;
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--heading-auth);
+  background-color: #FFFFFF;
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
   outline: none;
-  transition: all 0.2s ease;
+  caret-color: var(--primary-btn);
+  transition: border-color 0.2s ease;
 }
 
 .otp-box:focus {
-  border-color: var(--primary-coral);
-  background-color: #FFFFFF;
-  box-shadow: 0 0 0 3px var(--primary-coral-light);
+  border-color: var(--primary-btn);
 }
 
 .otp-box.filled {
-  border-color: #4A4D54;
-  background-color: #FFFFFF;
+  border-color: #8C8C8C;
 }
 
-/* Buttons */
+.otp-group-dash {
+  font-size: 20px;
+  color: var(--heading-auth);
+  font-weight: 600;
+  padding: 0 4px;
+}
+
+.otp-timer-row {
+  font-size: 14px;
+  color: var(--heading-auth);
+  margin-bottom: 24px;
+}
+
+.otp-timer-count {
+  color: var(--accent-orange);
+  font-weight: 600;
+}
+
+.resend-btn {
+  background: none;
+  border: none;
+  color: var(--accent-orange);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 4px;
+  font-family: inherit;
+}
+
+.resend-btn:hover {
+  text-decoration: underline;
+}
+
+/* Pinned Bottom Buttons & Terms */
+.auth-bottom-pinned {
+  margin-top: auto;
+  padding-top: 32px;
+  padding-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  width: 100%;
+}
+
 .btn {
   height: 52px;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 10px;
   font-size: 16px;
   font-weight: 600;
   font-family: inherit;
@@ -204,49 +295,39 @@ body {
 }
 
 .btn-primary {
-  background-color: var(--primary-coral);
+  background-color: var(--primary-btn);
   color: #FFFFFF;
-  box-shadow: 0 4px 14px rgba(255, 109, 106, 0.35);
+  letter-spacing: 0.5px;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--primary-coral-hover);
-  transform: translateY(-1px);
-}
-
-.btn-primary:active:not(:disabled) {
-  transform: translateY(0);
+  background-color: var(--primary-btn-hover);
 }
 
 .btn-primary:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: not-allowed;
-  box-shadow: none;
 }
 
-.auth-footer {
-  margin-top: 24px;
-  text-align: center;
-}
-
-.resend-text {
-  font-size: 14px;
+.terms-notice {
+  font-size: 12px;
   color: var(--text-muted);
+  text-align: center;
+  line-height: 1.5;
 }
 
-.link-button {
-  background: none;
-  border: none;
-  color: var(--primary-coral);
-  font-weight: 600;
+.terms-bold {
+  font-weight: 700;
+  color: var(--heading-auth);
+}
+
+.form-error-banner {
+  background-color: #FDE8E8;
+  color: #C81E1E;
+  padding: 10px 14px;
+  border-radius: 8px;
   font-size: 14px;
-  font-family: inherit;
-  cursor: pointer;
-  padding: 0 4px;
-}
-
-.link-button:hover:not(:disabled) {
-  text-decoration: underline;
+  margin-top: 14px;
 }
 
 .link-button:disabled {

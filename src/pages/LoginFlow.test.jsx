@@ -17,7 +17,7 @@ describe('Login & OTP Flow', () => {
     vi.restoreAllMocks();
   });
 
-  it('shows validation error if phone number is not 10 digits', async () => {
+  it('renders design copy, formats phone number while typing, and keeps Get OTP disabled until 10 digits', async () => {
     const user = userEvent.setup();
 
     render(
@@ -30,16 +30,27 @@ describe('Login & OTP Flow', () => {
       </AuthProvider>
     );
 
-    const input = screen.getByPlaceholderText('Enter Mobile Number');
-    const submitBtn = screen.getByRole('button', { name: /send code/i });
-
-    // Enter only 5 digits
-    await user.type(input, '98189');
-    await user.click(submitBtn);
-
+    expect(screen.getByText('Sign Up to Fastor')).toBeInTheDocument();
     expect(
-      screen.getByText('Please enter a valid 10-digit mobile number.')
+      screen.getByText(
+        'Let us know your mobile number and we will send you an OTP for verification.'
+      )
     ).toBeInTheDocument();
+
+    const input = screen.getByPlaceholderText('00000 00000');
+    const submitBtn = screen.getByRole('button', { name: /get otp/i });
+
+    expect(submitBtn).toBeDisabled();
+
+    // Type 5 digits
+    await user.type(input, '98189');
+    expect(input).toHaveValue('98189');
+    expect(submitBtn).toBeDisabled();
+
+    // Type 5 more digits -> auto formats to 5 + space + 5
+    await user.type(input, '79450');
+    expect(input).toHaveValue('98189 79450');
+    expect(submitBtn).not.toBeDisabled();
   });
 
   it('successfully submits valid phone and navigates to OTP screen', async () => {
@@ -62,14 +73,17 @@ describe('Login & OTP Flow', () => {
       </AuthProvider>
     );
 
-    const input = screen.getByPlaceholderText('Enter Mobile Number');
-    const submitBtn = screen.getByRole('button', { name: /send code/i });
+    const input = screen.getByPlaceholderText('00000 00000');
+    const submitBtn = screen.getByRole('button', { name: /get otp/i });
 
     await user.type(input, '9818979450');
+    expect(submitBtn).not.toBeDisabled();
     await user.click(submitBtn);
 
     await waitFor(() => {
-      expect(screen.getByText('OTP Verification')).toBeInTheDocument();
+      expect(
+        screen.getByText(/OTP Verification|6-digit code/)
+      ).toBeInTheDocument();
     });
 
     expect(global.fetch).toHaveBeenCalledWith(
