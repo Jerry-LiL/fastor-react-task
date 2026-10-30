@@ -126,7 +126,7 @@ curl -X GET "https://staging.fastor.ai/v1/m/restaurant?city_id=118" \
   - Call button gradient: `#FF936D` to `#FF726B`
   - Wallet button gradient: `#7CC7ED` to `#4F79CB`
 - **Typography**: Auth screens use Mulish; headings and dish titles on home/detail views use League Spartan. Both are loaded via Google Fonts in `index.html`.
-- **Food Photography**: Unsplash food photos for pizza, sushi, curry, lasagna, cupcake, shake, and burger are copied from `/workspace/fastor_figma/images/` to `public/images/`.
+- **Food Photography**: The food photos in `public/images/` are from Unsplash (free to use under the Unsplash licence).
 - **PWA Configuration**: A web manifest is added in `public/manifest.webmanifest` (`name: "Fastor"`, `theme_color: #FF5701`) with corresponding meta tags in `index.html`.
 
 ---
