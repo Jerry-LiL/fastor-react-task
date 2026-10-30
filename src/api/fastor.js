@@ -106,3 +106,9 @@ export async function fetchRestaurants(token, cityId = 118) {
 
   return json.data?.results || [];
 }
+
+/**
+ * Alias for fetchRestaurants to match collection naming.
+ */
+export const getRestaurants = fetchRestaurants;
+
