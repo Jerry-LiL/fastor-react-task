@@ -13,13 +13,9 @@ export default function ProductDetail() {
 
   const item = getItemById(id);
 
-  const [qty, setQty] = useState(item?.id === 'pizza' ? 3 : 1);
+  const [qty, setQty] = useState(1);
   const defaultPortion =
-    item?.portions && item.portions.length > 0
-      ? item.id === 'pizza' && item.portions.length > 3
-        ? item.portions[3] // Jumbo for pizza to match Figma
-        : item.portions[0]
-      : null;
+    item?.portions && item.portions.length > 0 ? item.portions[0] : null;
   const [selectedPortion, setSelectedPortion] = useState(defaultPortion);
 
   if (!item) {

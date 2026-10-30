@@ -42,7 +42,7 @@ describe('ProductDetail Page', () => {
 
   it('enforces qty stepper bounds (min 1, max 20)', async () => {
     const user = userEvent.setup();
-    renderWithProviders('/item/sushi'); // sushi starts with qty 1
+    renderWithProviders('/item/pizza');
 
     const decBtn = screen.getByRole('button', { name: /decrease quantity/i });
     const incBtn = screen.getByRole('button', { name: /increase quantity/i });
@@ -70,25 +70,25 @@ describe('ProductDetail Page', () => {
     const user = userEvent.setup();
     renderWithProviders('/item/pizza');
 
-    // Pizza starts with Jumbo (+10.00) and qty 3: (14 + 10) * 3 = 72
+    // Pizza defaults to first portion (Personal, +0.00) and qty 1: (14 + 0) * 1 = 14
     expect(
-      screen.getByRole('button', { name: /add to cart · ₹72\.00/i })
+      screen.getByRole('button', { name: /add to cart · ₹14\.00/i })
     ).toBeInTheDocument();
 
-    // Select Personal portion (extra 0): (14 + 0) * 3 = 42
-    const personalOption = screen.getByText('Personal (4 Slices)');
-    await user.click(personalOption);
+    // Select Jumbo portion (extra 10.00): (14 + 10) * 1 = 24
+    const jumboOption = screen.getByText('Jumbo (12 Slices)');
+    await user.click(jumboOption);
 
     expect(
-      screen.getByRole('button', { name: /add to cart · ₹42\.00/i })
+      screen.getByRole('button', { name: /add to cart · ₹24\.00/i })
     ).toBeInTheDocument();
 
-    // Decrease quantity to 2: 14 * 2 = 28
-    const decBtn = screen.getByRole('button', { name: /decrease quantity/i });
-    await user.click(decBtn);
+    // Increase quantity to 2: (14 + 10) * 2 = 48
+    const incBtn = screen.getByRole('button', { name: /increase quantity/i });
+    await user.click(incBtn);
 
     expect(
-      screen.getByRole('button', { name: /add to cart · ₹28\.00/i })
+      screen.getByRole('button', { name: /add to cart · ₹48\.00/i })
     ).toBeInTheDocument();
   });
 
@@ -100,7 +100,7 @@ describe('ProductDetail Page', () => {
     await user.click(addBtn);
 
     // Toast notification should appear
-    expect(screen.getByText(/added to cart · ₹72\.00/i)).toBeInTheDocument();
+    expect(screen.getByText(/added to cart · ₹14\.00/i)).toBeInTheDocument();
 
     // Persisted in localStorage
     const savedCart = JSON.parse(localStorage.getItem('fastor_cart'));
@@ -108,9 +108,9 @@ describe('ProductDetail Page', () => {
     expect(savedCart[0]).toMatchObject({
       id: 'pizza',
       name: 'Pepperoni Pizza',
-      portion: 'jumbo',
-      qty: 3,
-      total: 72,
+      portion: 'personal',
+      qty: 1,
+      total: 14,
     });
   });
 
