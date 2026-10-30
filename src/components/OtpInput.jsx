@@ -1,6 +1,12 @@
 import React, { useRef, useEffect } from 'react';
 
-export default function OtpInput({ length = 6, value = '', onChange, disabled = false, autoFocus = true }) {
+export default function OtpInput({
+  length = 6,
+  value = '',
+  onChange,
+  disabled = false,
+  autoFocus = true,
+}) {
   const inputRefs = useRef([]);
 
   useEffect(() => {
@@ -13,18 +19,15 @@ export default function OtpInput({ length = 6, value = '', onChange, disabled = 
 
   const handleChange = (index, e) => {
     const rawVal = e.target.value;
-    // Only accept numeric digits
     const cleaned = rawVal.replace(/\D/g, '');
 
     if (!cleaned) {
-      // User cleared the input
       const newDigits = [...digits];
       newDigits[index] = '';
       onChange(newDigits.join(''));
       return;
     }
 
-    // If more than one digit was typed/inserted in single event
     if (cleaned.length > 1) {
       handlePastedText(cleaned, index);
       return;
@@ -36,7 +39,6 @@ export default function OtpInput({ length = 6, value = '', onChange, disabled = 
     const nextVal = newDigits.join('');
     onChange(nextVal);
 
-    // Auto-advance to next box
     if (index < length - 1) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -45,7 +47,6 @@ export default function OtpInput({ length = 6, value = '', onChange, disabled = 
   const handleKeyDown = (index, e) => {
     if (e.key === 'Backspace') {
       if (!digits[index] && index > 0) {
-        // Current box is empty, move back and clear previous
         const newDigits = [...digits];
         newDigits[index - 1] = '';
         onChange(newDigits.join(''));
@@ -83,26 +84,54 @@ export default function OtpInput({ length = 6, value = '', onChange, disabled = 
     inputRefs.current[focusIdx]?.focus();
   };
 
+  const renderInputBox = (index) => (
+    <input
+      key={index}
+      ref={(el) => (inputRefs.current[index] = el)}
+      type="text"
+      inputMode="numeric"
+      autoComplete={index === 0 ? 'one-time-code' : 'off'}
+      pattern="[0-9]*"
+      maxLength={2}
+      value={digits[index]}
+      onChange={(e) => handleChange(index, e)}
+      onKeyDown={(e) => handleKeyDown(index, e)}
+      disabled={disabled}
+      className={`otp-box ${digits[index] ? 'filled' : ''}`}
+      aria-label={`Digit ${index + 1}`}
+      data-testid={`otp-input-${index}`}
+    />
+  );
+
+  if (length === 6) {
+    return (
+      <div
+        className="otp-composite-row"
+        onPaste={handlePaste}
+        role="group"
+        aria-label="OTP inputs"
+      >
+        <div className="otp-subgroup">
+          {[0, 1, 2].map(renderInputBox)}
+        </div>
+        <span className="otp-group-dash" aria-hidden="true">
+          -
+        </span>
+        <div className="otp-subgroup">
+          {[3, 4, 5].map(renderInputBox)}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="otp-container" onPaste={handlePaste} role="group" aria-label="OTP inputs">
-      {Array.from({ length }).map((_, index) => (
-        <input
-          key={index}
-          ref={(el) => (inputRefs.current[index] = el)}
-          type="text"
-          inputMode="numeric"
-          autoComplete={index === 0 ? 'one-time-code' : 'off'}
-          pattern="[0-9]*"
-          maxLength={2}
-          value={digits[index]}
-          onChange={(e) => handleChange(index, e)}
-          onKeyDown={(e) => handleKeyDown(index, e)}
-          disabled={disabled}
-          className={`otp-box ${digits[index] ? 'filled' : ''}`}
-          aria-label={`Digit ${index + 1}`}
-          data-testid={`otp-input-${index}`}
-        />
-      ))}
+    <div
+      className="otp-composite-row"
+      onPaste={handlePaste}
+      role="group"
+      aria-label="OTP inputs"
+    >
+      {Array.from({ length }).map((_, index) => renderInputBox(index))}
     </div>
   );
 }

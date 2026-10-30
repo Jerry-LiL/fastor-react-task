@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -15,6 +15,7 @@ describe('Login & OTP Flow', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.useRealTimers();
   });
 
   it('renders design copy, formats phone number while typing, and keeps Get OTP disabled until 10 digits', async () => {
@@ -81,9 +82,7 @@ describe('Login & OTP Flow', () => {
     await user.click(submitBtn);
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/OTP Verification|6-digit code/)
-      ).toBeInTheDocument();
+      expect(screen.getByText('6-digit code')).toBeInTheDocument();
     });
 
     expect(global.fetch).toHaveBeenCalledWith(
@@ -94,10 +93,62 @@ describe('Login & OTP Flow', () => {
     );
   });
 
+  it('OTP screen shows formatted number, countdown turns into Resend (use fake timers) and resend calls register', async () => {
+    vi.useFakeTimers();
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ status: 'Success', data: 'otp resent' }),
+    });
+
+    render(
+      <AuthProvider>
+        <MemoryRouter
+          initialEntries={[{ pathname: '/otp', state: { phone: '9818979450' } }]}
+        >
+          <Routes>
+            <Route path="/otp" element={<Otp />} />
+          </Routes>
+        </MemoryRouter>
+      </AuthProvider>
+    );
+
+    // Formatted phone "+91 98189 79450"
+    expect(screen.getByText(/\+91 98189 79450/)).toBeInTheDocument();
+
+    // Initially shows countdown timer
+    expect(screen.getByText(/\(00:30\)/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /resend/i })).not.toBeInTheDocument();
+
+    // Fast-forward 30 seconds
+    act(() => {
+      vi.advanceTimersByTime(30000);
+    });
+
+    // Countdown becomes Resend button
+    const resendBtn = screen.getByRole('button', { name: /resend/i });
+    expect(resendBtn).toBeInTheDocument();
+
+    // Click Resend
+    await act(async () => {
+      resendBtn.click();
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/pwa/user/register'),
+      expect.objectContaining({
+        method: 'POST',
+      })
+    );
+
+    // Timer restarts to 30
+    expect(screen.getByText(/\(00:30\)/)).toBeInTheDocument();
+  });
+
   it('displays error message when incorrect OTP is entered (handles HTTP 200 with Failed status)', async () => {
     const user = userEvent.setup();
 
-    // Mock Fastor API's HTTP 200 with status: "Failed" response
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -110,7 +161,9 @@ describe('Login & OTP Flow', () => {
 
     render(
       <AuthProvider>
-        <MemoryRouter initialEntries={[{ pathname: '/otp', state: { phone: '9818979450' } }]}>
+        <MemoryRouter
+          initialEntries={[{ pathname: '/otp', state: { phone: '9818979450' } }]}
+        >
           <Routes>
             <Route path="/otp" element={<Otp />} />
           </Routes>
@@ -123,8 +176,8 @@ describe('Login & OTP Flow', () => {
       await user.type(otpInputs[i], '0');
     }
 
-    const verifyBtn = screen.getByRole('button', { name: /verify/i });
-    await user.click(verifyBtn);
+    const continueBtn = screen.getByRole('button', { name: /continue/i });
+    await user.click(continueBtn);
 
     await waitFor(() => {
       expect(screen.getByText('Incorrect OTP')).toBeInTheDocument();
@@ -150,7 +203,9 @@ describe('Login & OTP Flow', () => {
 
     render(
       <AuthProvider>
-        <MemoryRouter initialEntries={[{ pathname: '/otp', state: { phone: '9818979450' } }]}>
+        <MemoryRouter
+          initialEntries={[{ pathname: '/otp', state: { phone: '9818979450' } }]}
+        >
           <Routes>
             <Route path="/otp" element={<Otp />} />
             <Route path="/" element={<div>Home Screen Authenticated</div>} />
@@ -164,8 +219,8 @@ describe('Login & OTP Flow', () => {
       await user.type(otpInputs[i], String(i + 1));
     }
 
-    const verifyBtn = screen.getByRole('button', { name: /verify/i });
-    await user.click(verifyBtn);
+    const continueBtn = screen.getByRole('button', { name: /continue/i });
+    await user.click(continueBtn);
 
     await waitFor(() => {
       expect(screen.getByText('Home Screen Authenticated')).toBeInTheDocument();
