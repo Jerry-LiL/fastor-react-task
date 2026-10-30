@@ -5,6 +5,12 @@ import { loginWithOtp, registerUser } from '../api/fastor';
 import { isValidOtp } from '../utils/validation';
 import OtpInput from '../components/OtpInput';
 
+function formatPhone(phone = '') {
+  const digits = String(phone).replace(/\D/g, '').slice(0, 10);
+  if (digits.length <= 5) return digits;
+  return `${digits.slice(0, 5)} ${digits.slice(5)}`;
+}
+
 export default function Otp() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -13,9 +19,9 @@ export default function Otp() {
   const phone = location.state?.phone || '9818979450';
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
-  const [resendStatus, setResendStatus] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(30);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -23,10 +29,17 @@ export default function Otp() {
     }
   }, [isAuthenticated, navigate]);
 
+  useEffect(() => {
+    if (secondsLeft <= 0) return;
+    const interval = setInterval(() => {
+      setSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [secondsLeft]);
+
   const handleVerify = async (e) => {
     if (e) e.preventDefault();
     setError('');
-    setResendStatus('');
 
     if (!isValidOtp(otp)) {
       setError('Please enter all 6 digits of the OTP.');
@@ -53,12 +66,11 @@ export default function Otp() {
   const handleResend = async () => {
     if (isResending) return;
     setError('');
-    setResendStatus('');
     setIsResending(true);
 
     try {
       await registerUser(phone);
-      setResendStatus('Verification code resent successfully!');
+      setSecondsLeft(30);
       setOtp('');
     } catch (err) {
       setError(err.message || 'Failed to resend code. Please try again.');
@@ -67,27 +79,40 @@ export default function Otp() {
     }
   };
 
+  const formattedTime = `00:${String(secondsLeft).padStart(2, '0')}`;
+  const formattedPhone = formatPhone(phone);
+
   return (
     <div className="page-container screen-auth">
-      <div className="auth-nav-bar">
+      <div className="auth-top-bar">
         <button
           type="button"
           onClick={() => navigate('/login')}
-          className="back-icon-btn"
-          aria-label="Go back to mobile number screen"
+          className="back-arrow-btn"
+          aria-label="Back"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#FF5701"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <line x1="19" y1="12" x2="5" y2="12" />
             <polyline points="12 19 5 12 12 5" />
           </svg>
         </button>
       </div>
 
-      <div className="auth-content">
+      <div className="auth-body">
         <div className="auth-header">
-          <h1 className="auth-title">OTP Verification</h1>
+          <h1 className="auth-title">6-digit code</h1>
           <p className="auth-subtitle">
-            Enter the verification code we just sent on your Mobile Number.
+            Please enter the code we've sent to{' '}
+            <span className="auth-target-number">+91 {formattedPhone}</span>
           </p>
         </div>
 
@@ -100,7 +125,24 @@ export default function Otp() {
               if (error) setError('');
             }}
             disabled={isVerifying}
+            autoFocus
           />
+
+          <div className="otp-timer-row">
+            I didn't receive a code{' '}
+            {secondsLeft > 0 ? (
+              <span className="otp-timer-count">({formattedTime})</span>
+            ) : (
+              <button
+                type="button"
+                onClick={handleResend}
+                className="resend-btn"
+                disabled={isResending}
+              >
+                {isResending ? 'Resending...' : 'Resend'}
+              </button>
+            )}
+          </div>
 
           {error && (
             <div className="form-error-banner" role="alert">
@@ -108,34 +150,16 @@ export default function Otp() {
             </div>
           )}
 
-          {resendStatus && (
-            <div className="form-success-banner" role="status">
-              {resendStatus}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={isVerifying || otp.length < 6}
-          >
-            {isVerifying ? 'Verifying...' : 'Verify'}
-          </button>
-        </form>
-
-        <div className="auth-footer">
-          <p className="resend-text">
-            Didn't received code?{' '}
+          <div className="auth-bottom-pinned">
             <button
-              type="button"
-              onClick={handleResend}
-              disabled={isResending}
-              className="link-button"
+              type="submit"
+              className="btn btn-primary"
+              disabled={isVerifying || otp.length !== 6}
             >
-              {isResending ? 'Resending...' : 'Resend'}
+              {isVerifying ? 'Verifying...' : 'Continue'}
             </button>
-          </p>
-        </div>
+          </div>
+        </form>
       </div>
     </div>
   );
