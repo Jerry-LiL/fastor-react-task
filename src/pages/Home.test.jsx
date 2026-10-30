@@ -1,34 +1,11 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { AuthProvider } from '../context/AuthContext';
+import { ToastProvider } from '../context/ToastContext';
 import Home from './Home';
-
-const mockRestaurantsResponse = {
-  status: 'Success',
-  status_code: 200,
-  data: {
-    results: [
-      {
-        restaurant_id: '75',
-        restaurant_name: 'VYB Lounge',
-        address_complete: 'MG Road, Connaught Place',
-        logo: 'https://example.com/logo1.png',
-      },
-      {
-        restaurant_id: '68',
-        restaurant_name: 'Dream Carz Cafe',
-        address_complete: 'null', // tests the "null" string fallback
-        logo: 'https://example.com/logo2.png',
-      },
-    ],
-    meta: {
-      total_pages: 1,
-      total_count: 2,
-    },
-  },
-};
 
 describe('Home Page', () => {
   beforeEach(() => {
@@ -38,56 +15,105 @@ describe('Home Page', () => {
       'fastor_user',
       JSON.stringify({ user_name: 'Karan', user_id: '7208' })
     );
-
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => mockRestaurantsResponse,
-    });
   });
 
-  it('renders user greeting and location header', async () => {
+  it('renders user name from auth and location header', () => {
     render(
       <AuthProvider>
-        <MemoryRouter>
-          <Home />
-        </MemoryRouter>
+        <ToastProvider>
+          <MemoryRouter>
+            <Home />
+          </MemoryRouter>
+        </ToastProvider>
       </AuthProvider>
     );
 
-    expect(screen.getByText('Connaught Place')).toBeInTheDocument();
+    expect(screen.getByText('Current Locations')).toBeInTheDocument();
+    expect(screen.getByText('Model Town, New Delhi')).toBeInTheDocument();
     expect(screen.getByText('Karan')).toBeInTheDocument();
-    expect(screen.getByText("Let's explore this evening")).toBeInTheDocument();
-
-    await waitFor(() => {
-      expect(screen.getAllByText('VYB Lounge').length).toBeGreaterThan(0);
-    });
   });
 
-  it('renders restaurant list and falls back gracefully when address is "null"', async () => {
+  it('renders Best Seller tiles, promo carousel and items', () => {
     render(
       <AuthProvider>
-        <MemoryRouter>
-          <Home />
-        </MemoryRouter>
+        <ToastProvider>
+          <MemoryRouter>
+            <Home />
+          </MemoryRouter>
+        </ToastProvider>
       </AuthProvider>
     );
 
-    await waitFor(() => {
-      // Should find VYB Lounge in both horizontal taste cards and popular ones list
-      expect(screen.getAllByText('VYB Lounge').length).toBeGreaterThan(0);
-      expect(screen.getAllByText('Dream Carz Cafe').length).toBeGreaterThan(0);
+    expect(screen.getByText('Best Seller')).toBeInTheDocument();
+    expect(screen.getByText('₹103.00')).toBeInTheDocument();
+    expect(screen.getByText('₹50.00')).toBeInTheDocument();
+    expect(screen.getByText('₹12.99')).toBeInTheDocument();
+    expect(screen.getByText('₹8.20')).toBeInTheDocument();
+
+    expect(screen.getByText('30% OFF')).toBeInTheDocument();
+    expect(
+      screen.getAllByText('Experience our delicious new dish').length
+    ).toBeGreaterThan(0);
+  });
+
+  it('renders Popular Items and handles cancel order flow with confirmation', async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    render(
+      <AuthProvider>
+        <ToastProvider>
+          <MemoryRouter>
+            <Home />
+          </MemoryRouter>
+        </ToastProvider>
+      </AuthProvider>
+    );
+
+    expect(screen.getByText('Popular Items')).toBeInTheDocument();
+    expect(screen.getByText('Strawberry Shake')).toBeInTheDocument();
+    expect(screen.getByText('Chicken Burger')).toBeInTheDocument();
+
+    const cancelButtons = screen.getAllByRole('button', {
+      name: /cancel order/i,
     });
+    expect(cancelButtons.length).toBe(2);
 
-    // Address for VYB
-    expect(screen.getByText('MG Road, Connaught Place')).toBeInTheDocument();
+    await user.click(cancelButtons[0]);
 
-    // Address for Dream Carz Cafe was string "null", so fallback address must be displayed
-    expect(screen.getByText('Connaught Place, New Delhi')).toBeInTheDocument();
+    expect(confirmSpy).toHaveBeenCalledWith(
+      'Are you sure you want to cancel this order?'
+    );
+    expect(screen.getByText('Cancelled')).toBeInTheDocument();
 
-    // Placeholders like rating and cost must be displayed
-    expect(screen.getAllByText('4.5').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Popularity').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('₹200 Cost for two').length).toBeGreaterThan(0);
+    confirmSpy.mockRestore();
+  });
+
+  it('shows track driver toast and wallet coming soon toast', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AuthProvider>
+        <ToastProvider>
+          <MemoryRouter>
+            <Home />
+          </MemoryRouter>
+        </ToastProvider>
+      </AuthProvider>
+    );
+
+    const trackButtons = screen.getAllByRole('button', {
+      name: /track driver/i,
+    });
+    await user.click(trackButtons[0]);
+
+    expect(
+      screen.getByText("Driver tracking isn't available in this demo")
+    ).toBeInTheDocument();
+
+    const walletBtn = screen.getByRole('button', { name: /wallet/i });
+    await user.click(walletBtn);
+
+    expect(screen.getByText('Wallet coming soon')).toBeInTheDocument();
   });
 });
