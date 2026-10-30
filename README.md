@@ -2,7 +2,7 @@
 
 A mobile-first web application built with React 18 and Vite for Fastor's frontend assignment.
 
-Fastor sent a corrected Figma design ("Mobile-App-Design-Task"), and this version faithfully follows it across its 4 screens:
+Fastor sent a corrected Figma design ("Mobile-App-Design-Task"), and this version follows it across its 4 screens:
 1. Phone Number Signup (`/login`)
 2. 6-Digit OTP Verification (`/otp`)
 3. Home Dashboard (`/`)
@@ -18,7 +18,7 @@ Built with AI assistance (Google Antigravity) and reviewed by me.
 2. **OTP Verification Screen (`/otp`)**: Displays the target phone formatted as `+91 12345 67890`. OTP inputs are arranged into two groups of three boxes separated by a hyphen, featuring auto-advance, backspace handling, and paste support. A 30-second countdown runs (`00:30`); when it reaches zero, an orange "Resend" button appears to trigger the register endpoint again and restart the timer. Submitting calls Fastor's login endpoint (`123456` default OTP) and saves token and user profile into `AuthContext`.
 3. **Home Screen (`/`, protected)**:
    - Header with "Current Locations" and "Model Town, New Delhi".
-   - Top row containing a card with the logged-in user's name (e.g. "Karan") alongside two gradient shortcut buttons: Call (`tel:` protocol link) and Wallet (displays a toast notice).
+   - Top row containing a card with the logged-in user's name alongside two gradient shortcut buttons: Call (`tel:` protocol link) and Wallet (displays a toast notice). The name on the home screen comes from the login response's `user_name` (the shared staging test number returns whatever name was last set on it).
    - "Best Seller" horizontal scroll row with tall rounded image cards and bottom-right price tags.
    - Promotional carousel with a 30% OFF banner and pizza artwork, horizontally swipeable with scroll-snap and 5 synced indicator dots.
    - "Popular Items" order list showing previous orders, order date, item count, an orange "Cancel Order" action (with browser confirmation), and a peach "Track Driver" action (shows toast). Tapping any best seller tile or popular item name/image navigates to its detail page.
@@ -27,7 +27,7 @@ Built with AI assistance (Google Antigravity) and reviewed by me.
    - Price display (`₹14.00` for pizza) and quantity stepper with circle buttons (`-` and `+`, constrained between 1 and 20).
    - Title and description.
    - "Personal portion" selector with radio buttons and dotted leader lines connecting labels to additional prices (Personal, Medium, Familiar, Jumbo).
-   - Pinned full-width "Add to cart" button showing the running total (e.g. `Add to cart · ₹72.00`). Clicking it saves the selection to `CartContext` (persisted in `localStorage`) and presents a toast notification. Unknown item IDs render a friendly not-found screen with a link home.
+   - Pinned full-width "Add to cart" button showing the running total (defaults to quantity 1 and first portion). Clicking it saves the selection to `CartContext` (persisted in `localStorage`) and presents a toast notification. Unknown item IDs render a friendly not-found screen with a link home.
 
 ---
 
@@ -96,6 +96,7 @@ curl -X POST https://staging.fastor.ai/v1/pwa/user/login \
 }
 ```
 - **Note on Error Handling**: Fastor's staging API returns HTTP 200 with `status: "Failed"` on incorrect OTPs. The client code checks `body.status !== 'Success'` to handle errors properly.
+- **Note on User Name**: The name displayed on the home screen comes from the login response's `user_name` (the shared staging test number returns whatever name was last set on it).
 
 ### 3. Fetch Restaurants
 - **Endpoint**: `GET /v1/m/restaurant?city_id=118`
@@ -138,42 +139,49 @@ Tests are written using Vitest and Testing Library. All external fetch calls and
 npm test
 ```
 
-### Test Coverage (35 tests across 7 test files, 100% passing):
+### Test Coverage (35 tests across 7 test files):
 - `src/pages/LoginFlow.test.jsx` (6 tests):
-  - Renders design copy, formats phone number while typing (5 + space + 5), keeps Get OTP disabled until 10 digits
-  - Shows validation error if submitted without a valid 10-digit number
-  - Submits valid phone and navigates to OTP screen
-  - Shows formatted phone number `+91 98189 79450`
-  - 30-second countdown transitions into "Resend" button via fake timers, and resend re-invokes register
-  - Displays error banner on failed OTP verification (HTTP 200 with Failed status)
-  - Authenticates with correct OTP and saves token to `localStorage`
+  - Renders design copy, formats phone number while typing, and keeps Get OTP disabled until 10 digits
+  - Shows validation error if submitted without a valid 10-digit phone number
+  - Successfully submits valid phone and navigates to OTP screen
+  - Shows the entered number, counts down and lets you resend the code
+  - Displays error message when incorrect OTP is entered (handles HTTP 200 with Failed status)
+  - Successfully authenticates with correct OTP and saves token
 - `src/pages/Home.test.jsx` (4 tests):
-  - Renders user name from auth context and location header
-  - Renders Best Seller tiles, promo carousel with 30% OFF banner, and items
-  - Renders Popular Items and handles cancel order flow with `window.confirm`
-  - Displays toast notifications for Driver Tracking and Wallet shortcut
+  - Renders user name from auth and location header
+  - Renders Best Seller tiles, promo carousel and items
+  - Renders Popular Items and handles cancel order flow with confirmation
+  - Shows track driver toast and wallet coming soon toast
 - `src/pages/ProductDetail.test.jsx` (5 tests):
-  - Renders item name, base unit price, and portion radio options
-  - Enforces quantity stepper bounds (min 1, max 20)
-  - Portion selection and quantity updates alter the running total
-  - Adding to cart persists item into `CartContext` and `localStorage` with toast feedback
-  - Unknown item ID renders not-found message with link back to Home
+  - Renders item details, base unit price, and portion radio options
+  - Enforces qty stepper bounds (min 1, max 20)
+  - Portion selection and quantity changes update the running total price
+  - Adds item to cart context and persists in localStorage with toast feedback
+  - Renders not-found message and link to home for unknown item id
 - `src/components/OtpInput.test.jsx` (5 tests):
-  - Renders 6 inputs in grouped layout
-  - Focus auto-advances on typing
-  - Handles backspace to jump and clear previous inputs
-  - Supports pasting full 6-digit code
-  - Filters out non-numeric characters during paste
+  - Renders 6 input boxes by default
+  - Auto-advances focus as digits are entered
+  - Handles backspace moving focus back to previous input
+  - Supports pasting a 6-digit code
+  - Filters out non-digit characters during paste
 - `src/utils/price.test.js` (6 tests):
-  - Unit tests for `calculateItemTotal` with base price, portion extras, and quantities
-  - Decimal precision handling
-  - `formatPrice` formatting with rupee symbol
+  - Calculates total for base price and quantity 1 without extra portion cost
+  - Adds portion extra cost to base price before multiplying by quantity
+  - Handles decimal prices accurately
+  - Falls back safely on missing or invalid inputs
+  - Formats numbers with rupee symbol and two decimal places
+  - Handles numeric strings gracefully
 - `src/utils/validation.test.js` (7 tests):
-  - Phone number validation (10 digits, rejection of non-digits or wrong lengths)
-  - OTP validation (6 digits)
+  - Accepts valid 10-digit numbers
+  - Rejects numbers with fewer or more than 10 digits
+  - Rejects strings with letters or special characters
+  - Rejects empty, null, or undefined inputs
+  - Accepts valid 6-digit OTP
+  - Rejects OTP with non-6 digit lengths
+  - Rejects non-numeric characters
 - `src/components/ProtectedRoute.test.jsx` (2 tests):
-  - Unauthenticated redirect to `/login`
-  - Renders protected children when token is present
+  - Redirects to /login when unauthenticated
+  - Renders children when token exists in storage
 
 ---
 
