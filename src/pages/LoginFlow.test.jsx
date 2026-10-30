@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -52,6 +52,27 @@ describe('Login & OTP Flow', () => {
     await user.type(input, '79450');
     expect(input).toHaveValue('98189 79450');
     expect(submitBtn).not.toBeDisabled();
+  });
+
+  it('shows validation error if submitted without a valid 10-digit phone number', () => {
+    render(
+      <AuthProvider>
+        <MemoryRouter initialEntries={['/login']}>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+          </Routes>
+        </MemoryRouter>
+      </AuthProvider>
+    );
+
+    const form = screen
+      .getByRole('button', { name: /get otp/i })
+      .closest('form');
+    fireEvent.submit(form);
+
+    expect(
+      screen.getByText('Please enter a valid 10-digit mobile number.')
+    ).toBeInTheDocument();
   });
 
   it('successfully submits valid phone and navigates to OTP screen', async () => {
