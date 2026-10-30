@@ -4,6 +4,16 @@
  * so items, prices, descriptions, and orders are defined here.
  */
 
+function makePortions(tiers) {
+  return tiers.map(([id, name, extra = 0.0]) => ({ id, name, extra }));
+}
+
+const regularLarge = (extra = 3.0) =>
+  makePortions([
+    ['regular', 'Regular', 0.0],
+    ['large', 'Large', extra],
+  ]);
+
 export const BEST_SELLERS = [
   {
     id: 'sushi',
@@ -12,12 +22,11 @@ export const BEST_SELLERS = [
     image: '/images/sushi.jpg',
     description:
       'Fresh salmon nigiri and maki rolls with avocado, cucumber, and pickled ginger.',
-    portions: [
-      { id: 'personal', name: 'Personal (4 Slices)', extra: 0.0 },
-      { id: 'medium', name: 'Medium (8 Slices)', extra: 3.0 },
-      { id: 'familiar', name: 'Familiar (10 Slices)', extra: 6.0 },
-      { id: 'jumbo', name: 'Jumbo (12 Slices)', extra: 10.0 },
-    ],
+    portions: makePortions([
+      ['6pcs', '6 pcs', 0.0],
+      ['8pcs', '8 pcs', 20.0],
+      ['12pcs', '12 pcs', 45.0],
+    ]),
   },
   {
     id: 'curry',
@@ -26,12 +35,11 @@ export const BEST_SELLERS = [
     image: '/images/curry.jpg',
     description:
       'Aromatic chicken curry simmered with authentic spices, served with steamed basmati rice.',
-    portions: [
-      { id: 'personal', name: 'Personal (4 Slices)', extra: 0.0 },
-      { id: 'medium', name: 'Medium (8 Slices)', extra: 3.0 },
-      { id: 'familiar', name: 'Familiar (10 Slices)', extra: 6.0 },
-      { id: 'jumbo', name: 'Jumbo (12 Slices)', extra: 10.0 },
-    ],
+    portions: makePortions([
+      ['half', 'Half', 0.0],
+      ['full', 'Full', 20.0],
+      ['family', 'Family', 45.0],
+    ]),
   },
   {
     id: 'lasagna',
@@ -40,12 +48,7 @@ export const BEST_SELLERS = [
     image: '/images/lasagna.jpg',
     description:
       'Classic Italian layered pasta with rich meat ragu, creamy bechamel, and melted mozzarella.',
-    portions: [
-      { id: 'personal', name: 'Personal (4 Slices)', extra: 0.0 },
-      { id: 'medium', name: 'Medium (8 Slices)', extra: 3.0 },
-      { id: 'familiar', name: 'Familiar (10 Slices)', extra: 6.0 },
-      { id: 'jumbo', name: 'Jumbo (12 Slices)', extra: 10.0 },
-    ],
+    portions: regularLarge(4.0),
   },
   {
     id: 'cupcake',
@@ -54,12 +57,7 @@ export const BEST_SELLERS = [
     image: '/images/cupcake.jpg',
     description:
       'Vanilla bean sponge crowned with whipped mascarpone cream and fresh garden berries.',
-    portions: [
-      { id: 'personal', name: 'Personal (4 Slices)', extra: 0.0 },
-      { id: 'medium', name: 'Medium (8 Slices)', extra: 3.0 },
-      { id: 'familiar', name: 'Familiar (10 Slices)', extra: 6.0 },
-      { id: 'jumbo', name: 'Jumbo (12 Slices)', extra: 10.0 },
-    ],
+    portions: regularLarge(2.5),
   },
   {
     id: 'pizza',
@@ -87,12 +85,7 @@ export const POPULAR_ITEMS = [
     itemCountText: '2 items',
     description:
       'Rich, velvety strawberry milkshake crowned with thick whipped cream and fresh strawberries.',
-    portions: [
-      { id: 'personal', name: 'Personal (4 Slices)', extra: 0.0 },
-      { id: 'medium', name: 'Medium (8 Slices)', extra: 3.0 },
-      { id: 'familiar', name: 'Familiar (10 Slices)', extra: 6.0 },
-      { id: 'jumbo', name: 'Jumbo (12 Slices)', extra: 10.0 },
-    ],
+    portions: regularLarge(3.0),
   },
   {
     id: 'burger',
@@ -103,12 +96,7 @@ export const POPULAR_ITEMS = [
     itemCountText: '1 item',
     description:
       'Grilled chicken patty with crisp lettuce, ripe tomatoes, melted cheese, and toasted brioche buns.',
-    portions: [
-      { id: 'personal', name: 'Personal (4 Slices)', extra: 0.0 },
-      { id: 'medium', name: 'Medium (8 Slices)', extra: 3.0 },
-      { id: 'familiar', name: 'Familiar (10 Slices)', extra: 6.0 },
-      { id: 'jumbo', name: 'Jumbo (12 Slices)', extra: 10.0 },
-    ],
+    portions: regularLarge(4.0),
   },
 ];
 
