@@ -114,7 +114,7 @@ describe('Login & OTP Flow', () => {
     );
   });
 
-  it('OTP screen shows formatted number, countdown turns into Resend (use fake timers) and resend calls register', async () => {
+  it('shows the entered number, counts down and lets you resend the code', async () => {
     vi.useFakeTimers();
 
     global.fetch = vi.fn().mockResolvedValue({
