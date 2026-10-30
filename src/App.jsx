@@ -8,7 +8,6 @@ import Login from './pages/Login';
 import Otp from './pages/Otp';
 import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
-import RestaurantDetail from './pages/RestaurantDetail';
 
 export default function App() {
   return (
@@ -37,14 +36,6 @@ export default function App() {
                     element={
                       <ProtectedRoute>
                         <ProductDetail />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/restaurant/:id"
-                    element={
-                      <ProtectedRoute>
-                        <RestaurantDetail />
                       </ProtectedRoute>
                     }
                   />
