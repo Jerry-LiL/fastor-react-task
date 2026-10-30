@@ -1,183 +1,289 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { fetchRestaurants } from '../api/fastor';
-import RestaurantCard from '../components/RestaurantCard';
+import { useToast } from '../context/ToastContext';
+import {
+  BEST_SELLERS,
+  PROMO_SLIDES,
+  INITIAL_POPULAR_ORDERS,
+} from '../data/menu';
+import { formatPrice } from '../utils/price';
 
 export default function Home() {
-  const { token, user, logout } = useAuth();
-  const [restaurants, setRestaurants] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [bannerIndex, setBannerIndex] = useState(0);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { showToast } = useToast();
 
-  const userName = user?.user_name && user.user_name !== 'Guest' ? user.user_name : 'Karan';
+  const [orders, setOrders] = useState(INITIAL_POPULAR_ORDERS);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const carouselRef = useRef(null);
 
-  const banners = [
-    {
-      title: 'VEGGIE FRIENDLY EATERIES',
-      subtitle: 'Handpicked places for plant-based cravings',
-      badge: 'TOP PICKS',
-    },
-    {
-      title: 'WEEKEND SPECIAL DEALS',
-      subtitle: 'Flat 40% OFF on partner cafes',
-      badge: 'LIMITED TIME',
-    },
-    {
-      title: 'CHEF RECOMMENDED TASTES',
-      subtitle: 'Curated artisanal bakeries and gourmet treats',
-      badge: 'POPULAR',
-    },
-  ];
+  const userName = user?.user_name || 'Karan';
 
-  const loadData = async () => {
-    setIsLoading(true);
-    setError('');
-    try {
-      const data = await fetchRestaurants(token);
-      setRestaurants(data);
-    } catch (err) {
-      setError(err.message || 'Failed to load restaurants. Please try again.');
-    } finally {
-      setIsLoading(false);
+  const handleCancelOrder = (orderId) => {
+    const confirmed = window.confirm(
+      'Are you sure you want to cancel this order?'
+    );
+    if (confirmed) {
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.id === orderId ? { ...order, cancelled: true } : order
+        )
+      );
     }
   };
 
-  useEffect(() => {
-    if (token) {
-      loadData();
+  const handleTrackDriver = () => {
+    showToast("Driver tracking isn't available in this demo");
+  };
+
+  const handleWalletClick = () => {
+    showToast('Wallet coming soon');
+  };
+
+  const handleScroll = (e) => {
+    const { scrollLeft, clientWidth } = e.currentTarget;
+    if (clientWidth > 0) {
+      const idx = Math.round(scrollLeft / clientWidth);
+      setActiveSlide(idx);
     }
-  }, [token]);
+  };
+
+  const scrollToSlide = (idx) => {
+    if (carouselRef.current) {
+      carouselRef.current.scrollTo({
+        left: idx * carouselRef.current.clientWidth,
+        behavior: 'smooth',
+      });
+      setActiveSlide(idx);
+    }
+  };
 
   return (
     <div className="page-container screen-home">
       {/* Top Location Bar */}
-      <header className="home-header">
-        <div className="location-box">
-          <span className="location-label">Pre Order From</span>
-          <div className="location-selector">
-            <span className="location-pin" aria-hidden="true">📍</span>
-            <span className="location-name">Connaught Place</span>
-            <span className="location-chevron" aria-hidden="true">▾</span>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={logout}
-          className="logout-btn"
-          aria-label="Log out"
-          title="Log out"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <polyline points="16 17 21 12 16 7" />
-            <line x1="21" y1="12" x2="9" y2="12" />
-          </svg>
-        </button>
+      <header className="home-top-header">
+        <span className="location-label">Current Locations</span>
+        <h2 className="location-heading">Model Town, New Delhi</h2>
       </header>
+      <div className="header-divider" />
 
-      {/* Greeting Card with Action Buttons */}
-      <section className="user-greeting-card">
-        <div className="user-greeting-meta">
-          <h2 className="user-greeting-name">{userName}</h2>
-          <p className="user-greeting-sub">Let's explore this evening</p>
-        </div>
-
-        <div className="quick-actions">
-          <div className="quick-action-btn action-offers">
-            <div className="action-icon" aria-hidden="true">%</div>
-            <span className="action-label">Offers</span>
+      <div className="home-content">
+        {/* User Card & Action Buttons */}
+        <div className="user-action-row">
+          <div className="user-greeting-card">
+            <span className="user-name-text">{userName}</span>
           </div>
-          <div className="quick-action-btn action-wallet">
-            <div className="action-icon" aria-hidden="true">💳</div>
-            <span className="action-label">Wallet</span>
-          </div>
-        </div>
-      </section>
 
-      {/* Your Taste Section (Horizontal Scroll) */}
-      <section className="section-block taste-section">
-        <div className="section-header-row">
-          <h3 className="section-title">Your taste</h3>
-          <span className="section-link">see all &gt;</span>
-        </div>
+          <div className="user-action-buttons">
+            <a
+              href="tel:1800123456"
+              className="action-btn action-call-btn"
+              aria-label="Call"
+              title="Call"
+            >
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#FFFFFF"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+              </svg>
+            </a>
 
-        <div className="taste-carousel">
-          {isLoading ? (
-            <div className="loading-placeholder">Loading places...</div>
-          ) : restaurants.length > 0 ? (
-            restaurants.slice(0, 6).map((item) => (
-              <RestaurantCard
-                key={`taste-${item.restaurant_id}`}
-                restaurant={item}
-                variant="horizontal"
-              />
-            ))
-          ) : (
-            <p className="empty-text">No restaurants found</p>
-          )}
-        </div>
-      </section>
-
-      {/* Banner Carousel */}
-      <section className="section-block banner-section">
-        <div className="promo-banner">
-          <span className="banner-tag">{banners[bannerIndex].badge}</span>
-          <h3 className="banner-title">{banners[bannerIndex].title}</h3>
-          <p className="banner-sub">{banners[bannerIndex].subtitle}</p>
-          <button type="button" className="banner-cta">
-            Try Now
-          </button>
-        </div>
-        <div className="carousel-dots" role="tablist" aria-label="Promo carousel pagination">
-          {banners.map((_, i) => (
             <button
-              key={i}
               type="button"
-              className={`dot ${i === bannerIndex ? 'active' : ''}`}
-              onClick={() => setBannerIndex(i)}
-              aria-label={`Go to slide ${i + 1}`}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* Popular Ones Section (Vertical List) */}
-      <section className="section-block popular-section">
-        <div className="section-header-row">
-          <h3 className="section-title">Popular Ones</h3>
-        </div>
-
-        {isLoading && (
-          <div className="list-loading">
-            <div className="skeleton-card" />
-            <div className="skeleton-card" />
-            <div className="skeleton-card" />
-          </div>
-        )}
-
-        {error && (
-          <div className="error-card" role="alert">
-            <p>{error}</p>
-            <button type="button" onClick={loadData} className="retry-btn">
-              Retry
+              onClick={handleWalletClick}
+              className="action-btn action-wallet-btn"
+              aria-label="Wallet"
+              title="Wallet"
+            >
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#FFFFFF"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4" />
+                <path d="M4 6v12c0 1.1.9 2 2 2h14v-4" />
+                <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z" />
+              </svg>
             </button>
           </div>
-        )}
+        </div>
 
-        {!isLoading && !error && (
-          <div className="restaurant-list" data-testid="restaurant-list">
-            {restaurants.map((restaurant) => (
-              <RestaurantCard
-                key={restaurant.restaurant_id}
-                restaurant={restaurant}
-                variant="list"
-              />
+        {/* Best Seller Section */}
+        <section className="home-section best-seller-section">
+          <h2 className="section-title">Best Seller</h2>
+          <div className="best-seller-row" role="region" aria-label="Best Sellers">
+            {BEST_SELLERS.map((item) => (
+              <div
+                key={item.id}
+                className="best-seller-tile"
+                onClick={() => navigate(`/item/${item.id}`)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    navigate(`/item/${item.id}`);
+                  }
+                }}
+                aria-label={`${item.name} - ${formatPrice(item.price)}`}
+              >
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="best-seller-img"
+                  loading="lazy"
+                />
+                <span className="tile-price-tag">
+                  {formatPrice(item.price)}
+                </span>
+              </div>
             ))}
           </div>
-        )}
-      </section>
+        </section>
+
+        {/* Promo Carousel */}
+        <section className="promo-carousel-section" aria-label="Special Offers">
+          <div
+            className="promo-carousel-track"
+            ref={carouselRef}
+            onScroll={handleScroll}
+          >
+            {PROMO_SLIDES.map((slide) => (
+              <div
+                key={slide.id}
+                className="promo-card"
+                onClick={() => navigate(`/item/${slide.itemId}`)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    navigate(`/item/${slide.itemId}`);
+                  }
+                }}
+              >
+                <div className="promo-card-left">
+                  <div className="promo-ring promo-ring-top" aria-hidden="true" />
+                  <div className="promo-ring promo-ring-bottom" aria-hidden="true" />
+                  <p className="promo-sub">{slide.heading}</p>
+                  <h3 className="promo-discount">{slide.discount}</h3>
+                </div>
+                <div className="promo-card-right">
+                  <img
+                    src={slide.image}
+                    alt="Promo dish"
+                    className="promo-img"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="carousel-dots" role="tablist" aria-label="Carousel pagination">
+            {[0, 1, 2, 3, 4].map((dotIdx) => {
+              const active =
+                dotIdx === activeSlide ||
+                (activeSlide >= PROMO_SLIDES.length && dotIdx === 0);
+              return (
+                <button
+                  key={dotIdx}
+                  type="button"
+                  className={`carousel-dot ${active ? 'dot-active' : ''}`}
+                  onClick={() => scrollToSlide(dotIdx % PROMO_SLIDES.length)}
+                  aria-label={`Slide ${dotIdx + 1}`}
+                  aria-selected={active}
+                  role="tab"
+                />
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Popular Items Section */}
+        <section className="home-section popular-items-section">
+          <h2 className="section-title">Popular Items</h2>
+
+          <div className="order-items-list">
+            {orders.map((order, idx) => (
+              <React.Fragment key={order.id}>
+                <div className="order-row">
+                  <img
+                    src={order.image}
+                    alt={order.name}
+                    className="order-img"
+                    onClick={() => navigate(`/item/${order.itemId}`)}
+                    style={{ cursor: 'pointer' }}
+                  />
+
+                  <div className="order-details">
+                    <div className="order-meta-line">
+                      <span
+                        className="order-item-name"
+                        onClick={() => navigate(`/item/${order.itemId}`)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            navigate(`/item/${order.itemId}`);
+                          }
+                        }}
+                      >
+                        {order.name}
+                      </span>
+                      <span className="order-price">
+                        {formatPrice(order.price)}
+                      </span>
+                    </div>
+
+                    <div className="order-sub-line">
+                      <span className="order-date">{order.date}</span>
+                      <span className="order-count">{order.itemCountText}</span>
+                    </div>
+
+                    <div className="order-actions-row">
+                      {order.cancelled ? (
+                        <span className="pill-btn pill-cancelled">
+                          Cancelled
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="pill-btn pill-cancel"
+                          onClick={() => handleCancelOrder(order.id)}
+                        >
+                          Cancel Order
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        className="pill-btn pill-track"
+                        onClick={handleTrackDriver}
+                      >
+                        Track Driver
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                {idx < orders.length - 1 && (
+                  <div className="order-divider" />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
