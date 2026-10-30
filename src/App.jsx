@@ -7,6 +7,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Otp from './pages/Otp';
 import Home from './pages/Home';
+import ProductDetail from './pages/ProductDetail';
 import RestaurantDetail from './pages/RestaurantDetail';
 
 export default function App() {
@@ -28,6 +29,14 @@ export default function App() {
                     element={
                       <ProtectedRoute>
                         <Home />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/item/:id"
+                    element={
+                      <ProtectedRoute>
+                        <ProductDetail />
                       </ProtectedRoute>
                     }
                   />
